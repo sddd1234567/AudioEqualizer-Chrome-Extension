@@ -1,6 +1,10 @@
 
 document.addEventListener('DOMContentLoaded', () => {
-    const FREQUENCIES = [32, 64, 125, 250, 500, 1000, 2000, 4000, 8000, 16000];
+    // 20 frequencies spaced logarithmically from 32Hz to 16kHz
+    const FREQUENCIES = [
+        32, 45, 63, 87, 123, 173, 243, 341, 479, 672,
+        944, 1325, 1860, 2610, 3663, 5141, 7216, 10126, 14212, 16000
+    ];
     const GAIN_LIMIT = 15; // dB
 
     const eqContainer = document.getElementById('eq-container');
@@ -40,12 +44,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const freqLabel = document.createElement('div');
             freqLabel.className = 'freq-label';
-            freqLabel.textContent = freq < 1000 ? `${freq}` : `${freq / 1000}k`;
+            freqLabel.textContent = freq < 1000 ? `${freq}` : `${(freq / 1000).toFixed(1)}k`;
 
             sliderWrapper.appendChild(gainValueEl);
             sliderWrapper.appendChild(slider);
-            band.appendChild(freqLabel);
-            band.appendChild(sliderWrapper);
+            band.appendChild(sliderWrapper); // Slider first
+            band.appendChild(freqLabel);      // Then label
             eqContainer.appendChild(band);
 
             slider.addEventListener('input', (e) => handleSliderChange(e.target));
@@ -95,7 +99,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const presets = result.audioWaveEQPresets;
 
             if (settings) {
-                state.gains = settings.gains || state.gains;
+                // Ensure gains from storage match current frequencies
+                const newGains = {};
+                FREQUENCIES.forEach(f => {
+                    newGains[f] = settings.gains[f] !== undefined ? settings.gains[f] : 0;
+                });
+                state.gains = newGains;
                 state.enabled = typeof settings.enabled === 'boolean' ? settings.enabled : true;
             }
             if (presets) {
@@ -160,7 +169,12 @@ document.addEventListener('DOMContentLoaded', () => {
             resetEQ();
         } else {
             if (state.presets[name]) {
-                state.gains = { ...state.presets[name] };
+                // Ensure preset gains match current frequencies
+                const newGains = {};
+                FREQUENCIES.forEach(f => {
+                    newGains[f] = state.presets[name][f] !== undefined ? state.presets[name][f] : 0;
+                });
+                state.gains = newGains;
                 presetNameInput.value = name;
                 updateUIFromState();
                 applySettings();

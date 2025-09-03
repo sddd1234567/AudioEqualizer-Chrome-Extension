@@ -2,7 +2,11 @@
 let audioContext;
 let streamSource;
 let filters = [];
-const FREQUENCIES = [32, 64, 125, 250, 500, 1000, 2000, 4000, 8000, 16000];
+// More granular frequencies for 20 bands
+const FREQUENCIES = [
+    32, 45, 63, 87, 123, 173, 243, 341, 479, 672,
+    944, 1325, 1860, 2610, 3663, 5141, 7216, 10126, 14212, 16000
+];
 let audioStream; // Keep a reference to the stream to stop tracks later
 
 chrome.runtime.onMessage.addListener(handleMessages);
@@ -22,7 +26,7 @@ function handleMessages(message) {
             stopAudio();
             break;
         default:
-            console.warn(`Unexpected message type received: '${message.type}'.`);
+        // No longer needed: console.warn(`Unexpected message type received: '${message.type}'.`);
     }
     return true;
 }
@@ -43,10 +47,9 @@ async function startAudio(streamId, initialGains) {
             video: false
         });
 
-        const audio = new Audio();
+        // const audio = new Audio();
+        const audio = document.getElementById('source-audio');
         audio.srcObject = audioStream;
-        // Don't play the audio through the offscreen document's output.
-        // It will be processed by the audio context and played on the captured tab.
         audio.muted = true;
 
         audioContext = new AudioContext();
@@ -54,9 +57,15 @@ async function startAudio(streamId, initialGains) {
 
         filters = FREQUENCIES.map((freq, i) => {
             const filter = audioContext.createBiquadFilter();
-            filter.type = i === 0 ? 'lowshelf' : (i === FREQUENCIES.length - 1 ? 'highshelf' : 'peaking');
+            filter.type = 'peaking';
+            if (i === 0) {
+                filter.type = 'lowshelf';
+            }
+            if (i === FREQUENCIES.length - 1) {
+                filter.type = 'highshelf';
+            }
             filter.frequency.value = freq;
-            filter.Q.value = 1.41;
+            filter.Q.value = 4; // Increased Q for better precision
             filter.gain.value = initialGains[freq] || 0;
             return filter;
         });
@@ -87,6 +96,13 @@ function updateGains(gains) {
 }
 
 function stopAudio() {
+    const audio = document.getElementById('source-audio');
+    if (audio && audio.srcObject) {
+        audio.pause();
+        audio.srcObject.getTracks().forEach(track => track.stop());
+        audio.srcObject = null;
+    }
+
     if (audioStream) {
         audioStream.getTracks().forEach(track => track.stop());
         audioStream = null;
