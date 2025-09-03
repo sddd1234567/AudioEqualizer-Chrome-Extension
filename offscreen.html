@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Offscreen</title>
+</head>
+
+<body>
+    <!-- 
+      This audio element is crucial for keeping the offscreen document alive 
+      while processing tab audio. It will play the original, unprocessed audio 
+      from the tab, but since the offscreen document has no audible output, 
+      this will not be heard by the user.
+    -->
+    <audio id="source-audio"></audio>
+    <script src="offscreen.js"></script>
+</body>
+
+</html>

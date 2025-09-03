@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "AudioWave EQ",
+  "version": "1.0.0",
+  "description": "A sleek, powerful audio equalizer for your browser. Fine-tune any tab's audio with precision.",
+  "permissions": [
+    "tabCapture",
+    "storage",
+    "offscreen"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "offline_enabled": true
+}
